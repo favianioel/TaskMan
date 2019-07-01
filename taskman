@@ -1,0 +1,27 @@
+#! /usr/bin/env php
+<?php
+use Symfony\Component\Console\{Application};
+use TaskMan\Data\DatabaseAdapter;
+
+require 'vendor/autoload.php';
+
+$tm = new Application('TaskMan', '1.0');
+try {
+    $pdo = new PDO('sqlite:db.sqlite');
+    $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (Exception $e) {
+    echo 'Could not connect to the database' . $e;
+    exit(1);
+}
+$dbAdapter = new DatabaseAdapter($pdo);
+$tm->addCommands([
+    new TaskMan\Command\ShowCommand($dbAdapter),
+    new TaskMan\Command\AddCommand($dbAdapter),
+    new TaskMan\Command\CompleteCommand($dbAdapter),
+]);
+try {
+    $tm->run();
+} catch (Exception $e) {
+    echo "TaskMan is stuck";
+}
